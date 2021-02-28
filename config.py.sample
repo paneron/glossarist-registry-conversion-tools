@@ -1,0 +1,14 @@
+# path to dir with old glossarist data (with "concepts" subdirectory):
+input_dir = '/../iev/glossarist-data'
+
+# path to dir for converted items:
+output_dir = '/../iev/result'
+
+# default item date:
+default_date = '2018-11-17'
+
+# default item status:
+default_status = 'valid'
+
+# limit for reading source files
+source_limit = 164
