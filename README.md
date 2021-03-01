@@ -1,9 +1,12 @@
-# iev-data-extraction-tools
-Tools for converting IEV data in Glossarist Desktop format to new registry format used by Paneron extension
+# Glossarist data extraction tools
 
-**How to install**
+Tools for converting data in Glossarist Desktop format to new registry format used by Paneron extension.
 
-Setup virtual ENV:
+(NOTE: tested on IEV data, testing on TC 211 data is in progress.)
+
+## Setup
+
+Create a virtual environment:
 `python3 -m venv ./venv`
 
 Activate it:
@@ -24,6 +27,6 @@ Copy `config.py.sample` to `config.py`, then edit it:
 
 `source_limit` - convert less or equal files in old Glossarist Desktop format (`None` means convert all files)
 
-**Usage**
+## Usage
 
 Run `python3 convert.py` (don't forget about venv).
