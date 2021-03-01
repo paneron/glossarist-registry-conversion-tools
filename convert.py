@@ -110,9 +110,10 @@ def convert_stem(txt):
 
         i = 1
         for cur in stems_marks:
+            if i == 1 and cur[0] > 0:
+                output.append(txt[0:cur[0]])
             if i < len(stems_marks):
                 output.append(fix_stem_quotes(txt[cur[1]:stems_marks[i][0]]))
-                pass
             else:
                 output.append(fix_stem_quotes(txt[cur[1]:]))
             i += 1
