@@ -10,11 +10,14 @@ import glob
 import re
 
 import yaml
+from benedict import benedict
 
 import config as cfg
 
 
 def str_to_dt(date_str):
+    if 'T' in date_str:
+        date_str = date_str.split('T')[0]
     return datetime.datetime.strptime(
         date_str, '%Y-%m-%d'
     ).date()
@@ -26,7 +29,7 @@ def read_yaml(fname):
             'file': yaml.load(_f, Loader=yaml.FullLoader)
         }
         result['uuid'] = str(uuid5(ns_oid, str(result['file'])))
-        # for debug:
+        # for uuid and debug:
         result['name'] = fname
         return result
 
@@ -123,7 +126,66 @@ def convert_stem(txt):
         return txt
 
 
-def convert_concepts():
+def set_str(path, d, fn):
+    v = d.get_str(path, False)
+    if v:
+        d[path] = fn(v)
+    return d
+
+
+def set_lst(path, d, fn):
+    # get_str_list
+    v = d.get_list(path, False)
+    if v:
+        _l = []
+        for elm in v:
+            _l.append(fn(elm))
+        d[path] = _l
+    return d
+
+
+def parse_iev_specific(data):
+
+    d = benedict(data, keypath_separator='/')
+
+    # convert_stem:
+    d = set_str('data/definition', d, convert_stem)
+    d = set_str('data/designation', d, convert_stem)
+    d = set_lst('data/notes', d, convert_stem)
+    d = set_lst('data/examples', d, convert_stem)
+
+    terms = []
+    for elm in d.get_list('data/terms'):
+        term_designation = elm.get('designation', False)
+        if term_designation:
+            elm['designation'] = convert_stem(elm['designation'])
+        terms.append(elm)
+    del term_designation
+
+    if terms:
+        d['data/terms'] = terms
+    del terms
+
+    # convert dates:
+    if 'data/review_date' in d:
+        d = set_str('data/review_date', d, str_to_dt)
+        d.rename('data/review_date', 'data/reviewDate')
+
+    if 'data/review_decision_date' in d:
+        d = set_str('data/review_decision_date', d, str_to_dt)
+        d.rename('data/review_decision_date', 'data/reviewDecisionDate')
+
+    if 'data/review_decision_event' in d:
+        d.rename('data/review_decision_event', 'data/reviewDecisionEvent')
+
+    if 'data/date_amended' in d:
+        d = set_str('data/date_amended', d, str_to_dt)
+        d.rename('data/date_amended', 'data/dateAmended')
+
+    return d.dict()
+
+
+def convert_concepts(parse_specific=None):
     source = read_yaml_dir('concepts')
 
     print('Loaded %s source file(s).' % len(source))
@@ -132,11 +194,16 @@ def convert_concepts():
     for elm in source:
         term_name = elm['file'].pop('term')
         term_id = elm['file'].pop('termid')
+        if elm['file'].get('related', False):
+            related = elm['file'].pop('related')
+        else:
+            related = []
 
         universal = {
             'id': elm['uuid'],
             'dateAccepted': str_to_dt(cfg.default_date),
             'status': cfg.default_status,
+            'related': related,
             'data': {
                 'identifier': str(term_id),
                 'localizedConcepts': {}
@@ -144,13 +211,17 @@ def convert_concepts():
         }
 
         for lang in elm['file']:
+
             data = {
+                'id': str(uuid5(ns_oid,
+                    '%s/%s' % (lang, (elm['name'])[len(cfg.input_dir):])
+                    )),
                 'data': elm['file'][lang]
             }
 
             if data['data'].get('date_accepted', False):
                 date_accepted = data['data'].pop('date_accepted')
-                date_accepted = str_to_dt(date_accepted.split('T')[0])
+                date_accepted = str_to_dt(date_accepted)
                 data['dateAccepted'] = date_accepted
             else:
                 data['dateAccepted'] = str_to_dt(cfg.default_date)
@@ -162,8 +233,10 @@ def convert_concepts():
                 authoritative_source = data['data'].pop('authoritative_source')
             data['data']['authoritativeSource'] = [authoritative_source]
 
-            data['id'] = str(uuid5(ns_oid, str(data)))
+            if parse_specific:
+                data = parse_specific(data)
 
+            """
             designation = data['data'].get('designation', False)
             if designation:
                 data['data']['designation'] = convert_stem(designation)
@@ -195,7 +268,8 @@ def convert_concepts():
                 _examples = []
                 for example in examples:
                     _examples.append(convert_stem(example))
-                data['data']['notes'] = _examples
+                data['data']['examples'] = _examples
+            """
 
             universal['data']['localizedConcepts'][lang] = data['id']
 
@@ -210,4 +284,4 @@ if __name__ == '__main__':
         description='Convert data from old (concepts) to new yaml format.'
     )
 
-    convert_concepts()
+    convert_concepts(parse_iev_specific)
