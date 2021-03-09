@@ -1,26 +1,16 @@
 #!/usr/bin/python
 
-import datetime
 import pathlib
 import argparse
 
 from uuid import uuid5, NAMESPACE_OID as ns_oid
 import glob
 
-import re
-
 import yaml
-from benedict import benedict
 
 import config as cfg
-
-
-def str_to_dt(date_str):
-    if 'T' in date_str:
-        date_str = date_str.split('T')[0]
-    return datetime.datetime.strptime(
-        date_str, '%Y-%m-%d'
-    ).date()
+from utils import str_to_dt
+from specific import iev as parse_iev_specific
 
 
 def read_yaml(fname):
@@ -75,114 +65,6 @@ def save_items(items, dname):
         }
 
         save_yaml(uuid, dname, data)
-
-
-def fix_stem_quotes(txt):
-    opn = 0
-    end = 0
-    cur = 0
-
-    for char in txt:
-        if char == '[':
-            opn += 1
-        elif char == ']':
-            opn -= 1
-            if opn == -1:
-                end = cur
-                break
-
-        cur += 1
-
-    if end > 0:
-        txt_array = list(txt)
-        txt_array = ['`'] + txt_array
-        txt_array[end+1] = '`'
-        txt = ''.join(txt_array)
-
-    return txt
-
-
-def convert_stem(txt):
-    if 'stem:[' in txt:
-        result = ''
-        output = []
-
-        stems_marks = []
-        for m in re.finditer('stem\:\[', txt):
-            stems_marks.append((m.start(), m.end()))
-
-        i = 1
-        for cur in stems_marks:
-            if i == 1 and cur[0] > 0:
-                output.append(txt[0:cur[0]])
-            if i < len(stems_marks):
-                output.append(fix_stem_quotes(txt[cur[1]:stems_marks[i][0]]))
-            else:
-                output.append(fix_stem_quotes(txt[cur[1]:]))
-            i += 1
-
-        return ''.join(output)
-    else:
-        return txt
-
-
-def set_str(path, d, fn):
-    v = d.get_str(path, False)
-    if v:
-        d[path] = fn(v)
-    return d
-
-
-def set_lst(path, d, fn):
-    # get_str_list
-    v = d.get_list(path, False)
-    if v:
-        _l = []
-        for elm in v:
-            _l.append(fn(elm))
-        d[path] = _l
-    return d
-
-
-def parse_iev_specific(data):
-
-    d = benedict(data, keypath_separator='/')
-
-    # convert_stem:
-    d = set_str('data/definition', d, convert_stem)
-    d = set_str('data/designation', d, convert_stem)
-    d = set_lst('data/notes', d, convert_stem)
-    d = set_lst('data/examples', d, convert_stem)
-
-    terms = []
-    for elm in d.get_list('data/terms'):
-        term_designation = elm.get('designation', False)
-        if term_designation:
-            elm['designation'] = convert_stem(elm['designation'])
-        terms.append(elm)
-    del term_designation
-
-    if terms:
-        d['data/terms'] = terms
-    del terms
-
-    # convert dates:
-    if 'data/review_date' in d:
-        d = set_str('data/review_date', d, str_to_dt)
-        d.rename('data/review_date', 'data/reviewDate')
-
-    if 'data/review_decision_date' in d:
-        d = set_str('data/review_decision_date', d, str_to_dt)
-        d.rename('data/review_decision_date', 'data/reviewDecisionDate')
-
-    if 'data/review_decision_event' in d:
-        d.rename('data/review_decision_event', 'data/reviewDecisionEvent')
-
-    if 'data/date_amended' in d:
-        d = set_str('data/date_amended', d, str_to_dt)
-        d.rename('data/date_amended', 'data/dateAmended')
-
-    return d.dict()
 
 
 def convert_concepts(parse_specific=None):
