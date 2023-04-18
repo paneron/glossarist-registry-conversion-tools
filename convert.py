@@ -44,7 +44,7 @@ def read_yaml_dir(subdir):
 
 
 def save_yaml(uuid, dname, data):
-    file_path = '%s/subregisters/%s' % (cfg.output_dir, dname)
+    file_path = '%s/%s' % (cfg.output_dir, dname)
     pathlib.Path(file_path).mkdir(parents=True, exist_ok=True)
     file = open('%s/%s.yaml' % (file_path, uuid), 'w')
     file.write(yaml.dump(data, allow_unicode=True))
@@ -155,9 +155,9 @@ def convert_concepts(parse_specific=None):
 
             universal['data']['localizedConcepts'][lang] = data['id']
 
-            save_yaml(data['id'], '%s/localized-concept' % lang, data)
+            save_yaml(data['id'], 'localized-concept', data)
 
-        save_yaml(elm['uuid'], 'universal/concept', universal)
+        save_yaml(elm['uuid'], 'concept', universal)
 
 
 if __name__ == '__main__':
