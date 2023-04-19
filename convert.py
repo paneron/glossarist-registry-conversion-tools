@@ -9,7 +9,7 @@ import glob
 import yaml
 
 import config as cfg
-from utils import str_to_dt
+from utils import str_to_dt, format_values
 from specific import iev as parse_iev_specific
 
 
@@ -40,6 +40,8 @@ def read_yaml_dir(subdir):
         else:
             break
 
+    print(f'Number of files: {i}')
+
     return result
 
 
@@ -47,7 +49,7 @@ def save_yaml(uuid, dname, data):
     file_path = '%s/%s' % (cfg.output_dir, dname)
     pathlib.Path(file_path).mkdir(parents=True, exist_ok=True)
     file = open('%s/%s.yaml' % (file_path, uuid), 'w')
-    file.write(yaml.safe_dump(data, allow_unicode=True))
+    file.write(yaml.safe_dump(data, allow_unicode=True, default_flow_style=False))
     file.close()
 
 
@@ -116,6 +118,18 @@ def convert_concepts(parse_specific=None):
 
             if parse_specific:
                 data = parse_specific(data)
+
+            definition = data['data'].get('definition', False)
+            if definition:
+                data['data']['definition'] = format_values(definition)
+
+            notes = data['data'].get('notes', False)
+            if notes:
+                data['data']['notes'] = format_values(notes)
+
+            examples = data['data'].get('examples', False)
+            if examples:
+                data['data']['examples'] = format_values(examples)
 
             """
             designation = data['data'].get('designation', False)

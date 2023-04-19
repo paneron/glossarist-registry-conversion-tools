@@ -1,5 +1,7 @@
-import re
 import datetime
+import re
+
+import yaml
 
 
 def str_to_dt(date_str):
@@ -75,3 +77,30 @@ def set_lst(path, d, fn):
             _l.append(fn(elm))
         d[path] = _l
     return d
+
+
+def format_values(raw):
+    """
+    Given either a formatted string dict or a plain string,
+    returns a plain string (formatted string’s ``content`` key).
+    """
+    if isinstance(raw, str):
+        try:
+            obj = yaml.load(raw, yaml.Loader)
+        except Exception:
+            pass
+        else:
+            return format_values(obj)
+        return [{'content': raw}]
+    elif isinstance(raw, list):
+        output = []
+        for r in raw:
+            out = format_values(r)
+            if isinstance(out, list):
+                output.append(out[0])
+            else:
+                output.append(out)
+        return output
+    elif isinstance(raw, dict):
+        return [raw]
+
