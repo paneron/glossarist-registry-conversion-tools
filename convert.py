@@ -47,7 +47,7 @@ def save_yaml(uuid, dname, data):
     file_path = '%s/%s' % (cfg.output_dir, dname)
     pathlib.Path(file_path).mkdir(parents=True, exist_ok=True)
     file = open('%s/%s.yaml' % (file_path, uuid), 'w')
-    file.write(yaml.dump(data, allow_unicode=True))
+    file.write(yaml.safe_dump(data, allow_unicode=True))
     file.close()
 
 
@@ -72,7 +72,6 @@ def convert_concepts(parse_specific=None):
 
     print('Loaded %s source file(s).' % len(source))
 
-    items = []
     for elm in source:
         term_name = elm['file'].pop('term')
         term_id = elm['file'].pop('termid')
