@@ -9,7 +9,7 @@ import glob
 import yaml
 
 import config as cfg
-from utils import str_to_dt, format_values
+from utils import str_to_dt, format_values, get_status
 from specific import iev as parse_iev_specific
 
 
@@ -109,7 +109,7 @@ def convert_concepts(parse_specific=None):
             else:
                 data['dateAccepted'] = str_to_dt(cfg.default_date)
 
-            data['status'] = data['data'].pop('entry_status', cfg.default_status)
+            data['status'] = get_status(data['data'].pop('entry_status', cfg.default_status))
 
             authoritative_source = {}
             if data['data'].get('authoritative_source', False):

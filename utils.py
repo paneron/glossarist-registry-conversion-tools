@@ -104,3 +104,26 @@ def format_values(raw):
     elif isinstance(raw, dict):
         return [raw]
 
+
+ITEM_STATUSES = [
+  'submitted',
+  'valid',
+  'superseded',
+  'retired',
+  'invalid',
+]
+RUS_STATUSES = {
+    "действующий": "valid",
+    "замененный": "superseded",
+    "окончательный": "final",
+    "изъятый": "retired",
+}
+
+
+def get_status(status):
+    if status not in ITEM_STATUSES:
+        if not RUS_STATUSES.get(status, False):
+            raise Exception(f"Matching status not found --> {status}")
+        else:
+            return RUS_STATUSES[status]
+    return status
