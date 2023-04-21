@@ -119,14 +119,9 @@ def convert_concepts(parse_specific=None):
             if parse_specific:
                 data = parse_specific(data)
 
-            definition = data['data'].get('definition', [])
-            data['data']['definition'] = format_values(definition)
-
-            notes = data['data'].get('notes', [])
-            data['data']['notes'] = format_values(notes)
-
-            examples = data['data'].get('examples', [])
-            data['data']['examples'] = format_values(examples)
+            data['data']['definition'] = format_values(data['data'].get('definition', []))
+            data['data']['notes'] = format_values(data['data'].get('notes', []))
+            data['data']['examples'] = format_values(data['data'].get('examples', []))
 
             """
             designation = data['data'].get('designation', False)

@@ -80,10 +80,6 @@ def set_lst(path, d, fn):
 
 
 def format_values(raw):
-    """
-    Given either a formatted string dict or a plain string,
-    returns a plain string (formatted string’s ``content`` key).
-    """
     if isinstance(raw, str):
         try:
             obj = yaml.load(raw, yaml.Loader)
