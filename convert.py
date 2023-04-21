@@ -95,6 +95,10 @@ def convert_concepts(parse_specific=None):
 
         for lang in elm['file']:
 
+            # Remove _revisions
+            if elm['file'][lang].get('_revisions'):
+                del elm['file'][lang]['_revisions']
+
             data = {
                 'id': str(uuid5(ns_oid,
                     '%s/%s' % (lang, (elm['name'])[len(cfg.input_dir):])
