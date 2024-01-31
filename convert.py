@@ -1,16 +1,15 @@
 #!/usr/bin/python
 
-import pathlib
 import argparse
-
-from uuid import uuid5, NAMESPACE_OID as ns_oid
 import glob
+import pathlib
+from uuid import uuid5, NAMESPACE_OID as ns_oid
 
 import yaml
 
 import config as cfg
-from utils import str_to_dt, format_values, get_status
 from specific import iev as parse_iev_specific
+from utils import str_to_dt, format_values, get_status
 
 
 def read_yaml(fname):
@@ -99,6 +98,20 @@ def convert_concepts(parse_specific=None):
             if elm['file'][lang].get('_revisions'):
                 del elm['file'][lang]['_revisions']
 
+            def delete_without_failing(key):
+                try:
+                    del elm['file'][key]
+                except KeyError:
+                    pass
+
+            delete_without_failing('reviewDate')
+            delete_without_failing('reviewDecisionDate')
+            delete_without_failing('reviewDecisionEvent')
+            delete_without_failing('review_decision')
+            delete_without_failing('review_decision_notes')
+            delete_without_failing('review_status')
+            delete_without_failing('dates')
+
             data = {
                 'id': str(uuid5(ns_oid,
                     '%s/%s' % (lang, (elm['name'])[len(cfg.input_dir):])
@@ -163,6 +176,10 @@ def convert_concepts(parse_specific=None):
             """
 
             universal['data']['localizedConcepts'][lang] = data['id']
+
+            # for source in data['data'].get('sources', []):
+            #     if "(E), " in source.get("clause", ""):
+            #         source["clause"] = source["clause"].replace("(E), ", "")
 
             save_yaml(data['id'], 'localized-concept', data)
 
