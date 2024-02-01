@@ -100,16 +100,20 @@ def convert_concepts(parse_specific=None):
 
             def delete_without_failing(key):
                 try:
-                    del elm['file'][key]
+                    del elm['file'][lang][key]
                 except KeyError:
                     pass
 
             delete_without_failing('reviewDate')
+            delete_without_failing('review_date')
             delete_without_failing('reviewDecisionDate')
             delete_without_failing('reviewDecisionEvent')
             delete_without_failing('review_decision')
+            delete_without_failing('review_decision_date')
             delete_without_failing('review_decision_notes')
+            delete_without_failing('review_decision_event')
             delete_without_failing('review_status')
+            delete_without_failing('review_indicator')
             delete_without_failing('dates')
 
             data = {
@@ -177,9 +181,9 @@ def convert_concepts(parse_specific=None):
 
             universal['data']['localizedConcepts'][lang] = data['id']
 
-            # for source in data['data'].get('sources', []):
-            #     if "(E), " in source.get("clause", ""):
-            #         source["clause"] = source["clause"].replace("(E), ", "")
+            for source in data['data'].get('sources', []):
+                if "(E), " in source.get("clause", ""):
+                    source["clause"] = source["clause"].replace("(E), ", "")
 
             save_yaml(data['id'], 'localized-concept', data)
 
